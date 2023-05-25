@@ -8,8 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.shiro.crypto.SecureRandomNumberGenerator;
-import javax.validation.constraints.AssertTrue;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,7 +32,7 @@ public class StockServiceTest {
     @Before
     public void setUp() throws Exception {
         sId = "testStock";
-        stockExpected.setId("testStock");
+        stockExpected.setCode("testStock");
         stockExpected.setName("test");
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         Date date = formatter.parse("2023-03-08");
@@ -78,7 +77,7 @@ public class StockServiceTest {
     public void findByIdLike() {
         List<Stock> stocks = stockService.findByIdLike("te");
         for (Stock stock : stocks) {
-            String id = stock.getId();
+            String id = stock.getCode();
             assertTrue(id.contains("te"));
         }
     }
@@ -86,7 +85,7 @@ public class StockServiceTest {
     @Test
     public void saveStocks() {
         stockService.saveStocks(stocksExpected);
-        Stock s = stockService.findById(stockExpected.getId());
+        Stock s = stockService.findById(stockExpected.getCode());
         assertEquals(stockExpected,s);
     }
 }

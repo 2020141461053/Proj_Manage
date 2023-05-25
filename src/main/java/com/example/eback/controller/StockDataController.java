@@ -7,32 +7,21 @@ import com.example.eback.entity.StockData;
 import com.example.eback.redis.RedisService;
 import com.example.eback.result.Result;
 import com.example.eback.result.ResultFactory;
-import com.example.eback.scheduled.UpdateTask;
 import com.example.eback.service.StockDataService;
 import com.example.eback.service.StockService;
-import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import io.swagger.annotations.ApiOperation;
-import lombok.val;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -60,7 +49,7 @@ public class StockDataController {
     @GetMapping("/api/stock_data/get")
     public Result getBysid(@RequestParam("sid")String sid) {
         List<StockData> stockDatas = stockDataService.findById(sid);
-        stockDatas.add((StockData) redisService.get(sid));
+        //stockDatas.add((StockData) redisService.get(sid));
         return ResultFactory.buildSuccessResult(stockDatas);
     }
 
@@ -184,7 +173,7 @@ public class StockDataController {
         List<Stock> stockList= stockService.findAll();
         List<String> stock_codes= new ArrayList<>();
         for( Stock stock:stockList){
-            stock_codes.add(stock.getId());
+            stock_codes.add(stock.getCode());
         }
         String codes = String.join(",", stock_codes);
         String new_url="http://hq.sinajs.cn/list="+codes;

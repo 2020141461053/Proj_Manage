@@ -1,17 +1,16 @@
 package com.example.eback.listener;
 
-import com.example.eback.entity.StockData;
 import org.springframework.context.ApplicationEvent;
 
 public class StockDataEvent extends ApplicationEvent {
-    private  StockData stockData;
-    public StockDataEvent(Object source, StockData stockData) {
+    private  String stockCode;
+    public StockDataEvent(Object source, String stockCode) {
         super(source);
-        this.stockData=stockData;
+        this.stockCode=stockCode;
 
     }
 
-    public StockData getStockData() {
-        return stockData;
+    public String getStockCode() {
+        return stockCode;
     }
 }

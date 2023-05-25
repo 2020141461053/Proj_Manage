@@ -10,8 +10,8 @@ public class StockDataPublisher {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
-    public void publishStockDataEvent(StockData stockData) {
-        StockDataEvent event = new StockDataEvent(this,stockData);
+    public void publishStockDataEvent(String stockCode) {
+        StockDataEvent event = new StockDataEvent(this,stockCode);
         eventPublisher.publishEvent(event);
     }
 }

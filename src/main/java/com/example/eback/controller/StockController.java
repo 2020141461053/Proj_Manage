@@ -3,6 +3,7 @@ package com.example.eback.controller;
 import com.example.eback.entity.Stock;
 import com.example.eback.entity.StockData;
 import com.example.eback.entity.User;
+import com.example.eback.listener.StockDataPublisher;
 import com.example.eback.redis.RedisService;
 import com.example.eback.result.Result;
 import com.example.eback.result.ResultFactory;
@@ -38,6 +39,9 @@ public class StockController {
     @Autowired
     RedisService redisService;
 
+    @Autowired
+    private StockDataPublisher stockDataPublisher;
+
     private Logger log = LogManager.getLogger("stock");
 
     @ApiOperation(value = "获取股票列表", notes = "")
@@ -51,8 +55,8 @@ public class StockController {
         StockData stockInRedis;
         List<Stock> returnList = new ArrayList<>();//返回的列表数据
         for (Stock stock : stockList) {
-            stockInRedis = (StockData) redisService.get(stock.getId());//查询Redis里的最新数据
-            if (stockInRedis == null) {
+            //stockInRedis = (StockData) redisService.get(stock.getCode());//查询Redis里的最新数据
+            /*if (stockInRedis == null) {
                 //stock.setTurnover(0);
                 stock.setValue(0);
                 stock.setHigh(0);
@@ -62,7 +66,10 @@ public class StockController {
                 stock.setValue(stockInRedis.getValue());
                 stock.setHigh(stockInRedis.getHigh());
                 stock.setLow(stockInRedis.getLow());
-            }
+            }*/
+            stock.setValue(0);
+            stock.setHigh(0);
+            stock.setLow(0);
             returnList.add(stock);//添加到列表里
         }
         stockMypage.setContent(returnList);//替换列表
@@ -72,12 +79,13 @@ public class StockController {
     @ApiOperation(value = "上传新的股票", notes = "需要股票名称")
     @PostMapping("/api/stock/add")
     public Result add(@RequestBody Stock stock) {
-        String sid = stock.getId();
-        if (stockService.exsistById(sid)) {
+        String sid = stock.getCode();
+        if (stockService.exsistByCode(sid)) {
             return ResultFactory.buildFailResult("已有此股票");
         }
         stockService.saveStock(stock);
-        stockDataService.AddHistoryData(sid,"1024");
+        stockDataPublisher.publishStockDataEvent(sid);
+
         return ResultFactory.buildSuccessResult("添加成功");
     }
 

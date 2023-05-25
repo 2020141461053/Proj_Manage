@@ -46,7 +46,7 @@ public class FavoriteService {
         List<Stock> stockList =new ArrayList<>();
         for (User_Stock u_s : userStocks.getContent()){
             log.info(u_s.getSid());
-            stockList.add(stockDAO.findById(u_s.getSid()));
+            stockList.add(stockDAO.findByCode(u_s.getSid()));
         }
         stocks.setContent(stockList);
         stocks.setTotalElements(userStocks.getTotalElements());
@@ -64,7 +64,7 @@ public class FavoriteService {
      */
     public Result addFavorite(int uid, String sid){
         User_Stock userStock=new User_Stock();
-        if (!stockDAO.existsById(sid)){
+        if (!stockDAO.existsByCode(sid)){
             return  ResultFactory.buildFailResult("添加失败，已有此股票");
         }
         if (favoriteDAO.existsUser_StockBySidAndUid(sid,uid)){

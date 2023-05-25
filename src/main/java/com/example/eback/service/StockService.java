@@ -15,8 +15,8 @@ public class StockService {
     @Autowired
     StockDAO stockDAO;
 
-    public boolean exsistById(String sid) {
-        return stockDAO.existsById(sid);
+    public boolean exsistByCode(String sid) {
+        return stockDAO.existsByCode(sid);
     }
 
     public MyPage<Stock> findAllByPage(int page, int size, String s) {
@@ -27,7 +27,7 @@ public class StockService {
         return  stockDAO.findAll();
     }
     public Stock findById(String sid) {
-        return stockDAO.findById(sid);
+        return stockDAO.findByCode(sid);
     }
 
     public List<Stock> findByNameLike(String sname) {

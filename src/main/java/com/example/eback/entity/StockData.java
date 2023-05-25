@@ -27,7 +27,6 @@ public class StockData {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "stock_code")
     private String sid;//股票号
 
 

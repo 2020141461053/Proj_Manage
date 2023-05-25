@@ -113,7 +113,7 @@ public class StockDataService {
 
         return tnDataDAO.findByStockCodeAndStartAndEnd(StockCode, start, end);
     }
-    public  void AddHistoryData(String stock_code,String times){
+    public  String  AddHistoryData(String stock_code,String times){
         String url = "http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol="
                 + stock_code
                 +"&scale=60&ma=5datalen="
@@ -131,7 +131,11 @@ public class StockDataService {
             StringBuilder response = new StringBuilder();
             JsonParser parser = new JsonParser();
             inputLine = in.readLine();
-            JsonArray jsonArray = parser.parse(inputLine).getAsJsonArray();
+            JsonArray jsonArray;
+            try {
+                 jsonArray = parser.parse(inputLine).getAsJsonArray();
+            }
+            catch (Exception e) {return "股票码不正确";}
             in.close();
             StockData stockData;
             SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -148,12 +152,15 @@ public class StockDataService {
 
                 try {
                     Date date = formatter.parse(day);
-                    if (stockDataDAO.existsByDateAndSid(date,stock_code))
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTime(date);
+                    if (stockDataDAO.existsByDateAndSid(date,stock_code) ||calendar.get(Calendar.HOUR_OF_DAY)==15)
                         continue;
                     stockData.setDate(date);
                 } catch (ParseException e) {
                     e.printStackTrace();
                 }
+                stockData.setSid(stock_code);
                 stockData.setHigh(Float.parseFloat(high));
                 stockData.setLow(Float.parseFloat(low));
                 stockData.setOpen(Float.parseFloat(open));
@@ -165,6 +172,7 @@ public class StockDataService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return "成功";
     }
 
 }

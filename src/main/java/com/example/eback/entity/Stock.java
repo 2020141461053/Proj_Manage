@@ -2,12 +2,9 @@ package com.example.eback.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.opencsv.bean.CsvBindByName;
-import com.opencsv.bean.CsvDate;
 import lombok.*;
 
 import javax.persistence.*;
-import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -21,8 +18,8 @@ public class Stock {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "stock_code")
-    private String id;
+    private  int id;
+    private String code;
 
     private String name;
 

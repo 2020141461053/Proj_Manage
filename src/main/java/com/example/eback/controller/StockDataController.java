@@ -7,6 +7,7 @@ import com.example.eback.entity.StockData;
 import com.example.eback.redis.RedisService;
 import com.example.eback.result.Result;
 import com.example.eback.result.ResultFactory;
+import com.example.eback.scheduled.UpdateTask;
 import com.example.eback.service.StockDataService;
 import com.example.eback.service.StockService;
 import com.opencsv.CSVReader;
@@ -32,6 +33,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -166,19 +170,63 @@ public class StockDataController {
 
     }
 
-    @ApiOperation(value = "获得历史数据", notes = "全部填写")
-    @PostMapping("/api/stock_data_Tn/get")
-    public Result GetHisData(@RequestParam("sid ") String s_code,
-                            @RequestParam("endDay") Date endDay,
-                            @RequestParam("startDay") Date  startDay){
-        TnDataCode tnDataCode = stockDataService.existsByStockCodeAndStartAndEnd(s_code, endDay, startDay);
-        if (tnDataCode.getCode()< 0){
-            return  ResultFactory.buildFailResult(tnDataCode.getMsg());
-        }
-        return ResultFactory.buildSuccessResult(stockDataService.getTnData(s_code, endDay, startDay));
+    @ApiOperation(value = "刷新全部数据", notes = "全部填写")
+    @GetMapping("/api/stock_data_flash")
+    public Result GetHisData(){
+        // 常规获取数据 放到 Redis 里
+        GetAndPublish(stockService, redisService, stockDataPublisher);
+        return  ResultFactory.buildSuccessResult("");
 
     }
 
+    public static void GetAndPublish(StockService stockService, RedisService redisService, StockDataPublisher stockDataPublisher) {
+        StockData stockData;
+        List<Stock> stockList= stockService.findAll();
+        List<String> stock_codes= new ArrayList<>();
+        for( Stock stock:stockList){
+            stock_codes.add(stock.getId());
+        }
+        String codes = String.join(",", stock_codes);
+        String new_url="http://hq.sinajs.cn/list="+codes;
+        if(codes.equals(""))
+            return;
+        try {
+            URL url = new URL(new_url);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("referer", "http://finance.sina.com.cn");
+            int status = conn.getResponseCode();
+            if (status == 200) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String line;
+                int i=0;
+                Stock stock;
+                while ((line = reader.readLine()) != null) {
+                    stockData=new StockData();
+                    stockData.parse(line);
+                    redisService.set(stock_codes.get(i),stockData);
+                    /**
+                     * 删除了websocket更新
+                     */
+                    //stockDataPublisher.publishStockDataEvent(stockData);
+                    stock=stockList.get(i);
+                    if (stock.getMax_high()<stockData.getValue()) {
+                        stock.setMax_high(stockData.getValue());
+                        stockService.saveStock(stock);
+                    }
+                    else  if (stock.getMin_low()>stockData.getValue()) {
+                        stock.setMin_low(stockData.getValue());
+                        stockService.saveStock(stock);
+                    }
+                    i++;
+                }
+                reader.close();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 }

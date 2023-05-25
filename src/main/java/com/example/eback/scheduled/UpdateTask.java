@@ -1,5 +1,6 @@
 package com.example.eback.scheduled;
 
+import com.example.eback.controller.StockDataController;
 import com.example.eback.entity.Stock;
 import com.example.eback.entity.StockData;
 import com.example.eback.listener.StockDataPublisher;
@@ -36,57 +37,15 @@ public class UpdateTask {
 
     }
 
-    @Scheduled(cron = "0 30 9 * * *") // 每天9：30点执行一次
-    public void Open() {
+    @Scheduled(cron = "0 30 9 * * *") // 每天9：30点执行一次 获取开盘数据
+    public void GetOpenData() {
         getData();
     }
 
-    @Scheduled(cron = "0 * * * * *") // 每分钟执行一次
+    @Scheduled(cron = "0 * 9-15 * * *") // 每分钟执行一次
     public void getData() {
         // 常规获取数据 放到 Redis 里
-        StockData stockData;
-        List<Stock> stockList=stockService.findAll();
-        List<String> stock_codes= new ArrayList<>();
-        for( Stock stock:stockList){
-            stock_codes.add(stock.getId());
-        }
-        String codes = String.join(",", stock_codes);
-        String new_url="http://hq.sinajs.cn/list="+codes;
-        try {
-            URL url = new URL("new_url");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("referer", "http://finance.sina.com.cn");
-            int status = conn.getResponseCode();
-            if (status == 200) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                String line;
-                int i=0;
-                Stock stock;
-                while ((line = reader.readLine()) != null) {
-                    stockData=new StockData();
-                    stockData.parse(line);
-                    redisService.set(stock_codes.get(i),stockData);
-                    stockDataPublisher.publishStockDataEvent(stockData);
-                    stock=stockList.get(i);
-                    if (stock.getMax_high()<stockData.getValue()) {
-                        stock.setMax_high(stockData.getValue());
-                        stockService.saveStock(stock);
-                    }
-                    else  if (stock.getMin_low()>stockData.getValue()) {
-                        stock.setMin_low(stockData.getValue());
-                        stockService.saveStock(stock);
-                    }
-                    i++;
-                }
-                reader.close();
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
+        StockDataController.GetAndPublish(stockService, redisService, stockDataPublisher);
 
     }
 

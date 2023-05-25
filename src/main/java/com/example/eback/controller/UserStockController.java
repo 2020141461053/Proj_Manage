@@ -48,14 +48,22 @@ public class UserStockController {
         User user = getUser();
         return ResultFactory.buildSuccessResult(favoriteService.findAll(user.getId(), pages, size));
     }
-    @GetMapping("/try")
-    public  String test(){
-        Map<String,String> map=new HashMap<>();
-        map.put("Dd","dd");
-        return  "123";
-    }
+
     public User getUser() {
         return userService.findByUsername(SecurityUtils.getSubject().getPrincipal().toString());
+    }
+    @ApiOperation(value = "用户风险类型判断" , notes = "")
+    @GetMapping("/RiskType/{score}")
+    public String determineRiskType(@PathVariable("score")int score) {
+        if (score <= 8) {
+            return "Low Risk";
+        } else if (score <= 12) {
+            return "Moderate Risk";
+        } else if (score <= 16) {
+            return "High Risk";
+        } else {
+            return "Very High Risk";
+        }
     }
 
 
